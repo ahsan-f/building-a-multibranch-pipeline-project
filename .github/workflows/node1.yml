@@ -5,6 +5,7 @@ on:
     branches:
       - development
       - production
+  workflow_dispatch:
 
 jobs:
   build:
@@ -74,4 +75,4 @@ jobs:
       - name: Manual confirmation
         run: echo "Manual confirmation required, finished using the website? (Proceed to continue)" && exit 0 # GitHub Actions doesn't have a direct 'input' equivalent for manual pauses.
       - name: Kill process
-        run: ./jenkins/scripts/kill.sh
+        run
