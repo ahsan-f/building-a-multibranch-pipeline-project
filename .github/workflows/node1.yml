@@ -53,7 +53,7 @@ jobs:
       - name: Deliver for development
         run: ./jenkins/scripts/deliver-for-development.sh
       - name: Manual confirmation
-        run: echo "Manual confirmation required, finished using the website? (Proceed to continue)" && exit 0 # GitHub Actions doesn't have a direct 'input' equivalent for manual pauses.
+        run: echo "Manual confirmation required, finished using the website? (Proceed to continue)" && exit 0
       - name: Kill process
         run: ./jenkins/scripts/kill.sh
 
@@ -73,6 +73,6 @@ jobs:
       - name: Deploy for production
         run: ./jenkins/scripts/deploy-for-production.sh
       - name: Manual confirmation
-        run: echo "Manual confirmation required, finished using the website? (Proceed to continue)" && exit 0 # GitHub Actions doesn't have a direct 'input' equivalent for manual pauses.
+        run: echo "Manual confirmation required, finished using the website? (Proceed to continue)" && exit 0
       - name: Kill process
-        run
+        run: ./jenkins/scripts/kill.sh
