@@ -1,31 +1,77 @@
-# This workflow will do a clean installation of node dependencies, cache/restore them, build the source code and run tests across different versions of node
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-nodejs
-
-name: Node.js CI
+name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ "master" ]
-  pull_request:
-    branches: [ "master" ]
+    branches:
+      - development
+      - production
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        node-version: [18.x, 20.x, 22.x]
-        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
-
+    container:
+      image: node:lts-alpine
+      ports:
+        - 3000:3000
+        - 5000:5000
+    environment:
+      CI: true
     steps:
-    - uses: actions/checkout@v4
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ matrix.node-version }}
-        cache: 'npm'
-    - run: npm ci
-    - run: npm run build --if-present
-    - run: npm test
+      - uses: actions/checkout@v4
+      - name: Install dependencies
+        run: npm install
+
+  test:
+    needs: build
+    runs-on: ubuntu-latest
+    container:
+      image: node:lts-alpine
+      ports:
+        - 3000:3000
+        - 5000:5000
+    environment:
+      CI: true
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run tests
+        run: ./jenkins/scripts/test.sh
+
+  deliver-for-development:
+    needs: test
+    if: github.ref == 'refs/heads/development'
+    runs-on: ubuntu-latest
+    container:
+      image: node:lts-alpine
+      ports:
+        - 3000:3000
+        - 5000:5000
+    environment:
+      CI: true
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deliver for development
+        run: ./jenkins/scripts/deliver-for-development.sh
+      - name: Manual confirmation
+        run: echo "Manual confirmation required, finished using the website? (Proceed to continue)" && exit 0 # GitHub Actions doesn't have a direct 'input' equivalent for manual pauses.
+      - name: Kill process
+        run: ./jenkins/scripts/kill.sh
+
+  deploy-for-production:
+    needs: test
+    if: github.ref == 'refs/heads/production'
+    runs-on: ubuntu-latest
+    container:
+      image: node:lts-alpine
+      ports:
+        - 3000:3000
+        - 5000:5000
+    environment:
+      CI: true
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy for production
+        run: ./jenkins/scripts/deploy-for-production.sh
+      - name: Manual confirmation
+        run: echo "Manual confirmation required, finished using the website? (Proceed to continue)" && exit 0 # GitHub Actions doesn't have a direct 'input' equivalent for manual pauses.
+      - name: Kill process
+        run: ./jenkins/scripts/kill.sh
